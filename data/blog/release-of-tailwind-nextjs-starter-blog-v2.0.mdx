@@ -190,3 +190,79 @@ Using the template? Support this effort by giving a star on GitHub, sharing your
 [^2]: This is different from Next.js App Directory layouts and are best thought of as reusable React containers.
 
 [^3]: This takes advantage of Server Components by making it simple to specify the layout of choice in the markdown file and match against the `layouts` object which is then used to render the appropriate layout component.
+```python
+# Dependency imports
+import pandas as pd
+import matplotlib.pyplot as plt
+import json
+from js import fetch
+
+# Helper Function which uses browser'a buit-in fetch API
+async def get_json(url):
+    resp = await fetch(url)
+    txt = await resp.text()
+    return json.loads(txt)
+    
+# Data acquisition by using helper function.
+# Get CPS data
+data = await get_json(
+    "https://api.census.gov/data/2026/cps/basic/jan?get=PEMLR,PWSSWGT,PEMARITL,PEEDUCA&for=state:*&key=YOUR_API_KEY"
+
+# Data exploration is not shown here
+# Preliminary data analysis is not shown here 
+
+# Data Wrangling a.k.a. data munging
+# Convert to DataFrame
+headers = data[0]
+rows = data[1:]
+df = pd.DataFrame(rows, columns=headers)
+
+# Prepare dor data visualization
+# Convert columns to numbers
+for col in ["PEMLR", "PWSSWGT", "PEMARITL", "PEEDUCA"]:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+
+# Add clearer labels
+employment_labels = {
+    1: "Employed",
+    2: "Employed - Absent",
+    3: "Unemployed - On Layoff",
+    4: "Unemployed - Looking",
+    5: "Not in Labor Force",
+    6: "Not in Labor Force - Disabled",
+    7: "Not in Labor Force - Other",
+    8: "Not in Labor Force - Retired"
+}
+
+df["Employment Status"] = df["PEMLR"].map(employment_labels)
+
+# -------------------------
+# Graph 1: CPS Employment Status Categories
+# -------------------------
+plt.figure(figsize=(12, 6))
+status_counts = df["Employment Status"].value_counts(dropna=True)
+bars = plt.bar(status_counts.index, status_counts.values, color="steelblue")
+
+plt.title("CPS Employment Status Categories")
+plt.xlabel("Employment status")
+plt.ylabel("Number of people in the sample")
+plt.xticks(rotation=30, ha="right")
+plt.bar_label(bars)
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+# -------------------------
+# Graph 2: CPS Person Survey Weights
+# -------------------------
+plt.figure(figsize=(10, 5))
+plt.hist(df["PWSSWGT"].dropna(), bins=10, color="orange", edgecolor="black")
+
+plt.title("CPS Person Survey Weights")
+plt.xlabel("Survey weight")
+plt.ylabel("Number of people in the sample")
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+```
