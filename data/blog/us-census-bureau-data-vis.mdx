@@ -1,0 +1,120 @@
+---
+title: 'U.S. Census Bureau Data Visualization'
+date: '2026-06-04'
+tags: ['data science', 'data visualization', 'JupyterLite', 'Python', 'U.S. Census Bureau']
+draft: false
+summary: A walk-through of data visualization of U.S. Census Bureau data.
+---
+
+# Dependency imports
+
+This code loads the tools needed for the project. It imports dependent of outside resources:
+- Pandas for organizing and working with data tables.
+- Matplotlib for creating graphs and charts.
+- JSON for reading data returned from the Census API.
+- Fetch, which allows the notebook to request data from the internet.
+
+```phyton
+import pandas as pd
+import matplotlib.pyplot as plt
+import json
+from js import fetch
+```
+# Helper Function which uses browser'a buit-in fetch API
+
+This function gets  data from a website in this case its later stated in this blog its the U.S. Census Bureau  website. “Get_json(url): sends a request to the provided web address (Census), receives the response (the data), converts the response into a format the notebook can understand, and returns the data for later use. This way different visualizations can be created to be represented. 
+```python
+async def get_json(url):
+    resp = await fetch(url)
+    txt = await resp.text()
+    return json.loads(txt) 
+```    
+# Data acquisition by using helper function to get CPS data
+
+This code requests data (by the helper function : get_json(url)) from the U.S. Census Bureau's Current Population Survey (CPS) API.  API is a key that a user registers to allow them to get data from the U.S. Census Bureau. The request asks for information about employment status, survey weights, marital status, and education level for all states. The returned data is stored for later analysis.
+
+```phyton
+
+data = await get_json(
+    "https://api.census.gov/data/2026/cps/basic/jan?get=PEMLR,PWSSWGT,PEMARITL,PEEDUCA&for=state:*&key=YOUR_API_KEY"
+)
+```
+
+# Data Wrangling a.k.a. data munging and converting to DataFrame
+
+This code separates the column names from the actual data and converts the information into a structured table called a DataFrame. This makes the data easier to organize, filter, analyze, and visualize. Which will be used to create graphs visualization. 
+
+**Data exploration and  preliminary data analysis is not shown here.**
+
+```phyton
+headers = data[0]
+rows = data[1:]
+df = pd.DataFrame(rows, columns=headers)
+```
+# Prepare for data visualization by convert columns to numbers
+
+This code converts selected columns from text values into numeric values according to the merits wanted for the visualization. Converting the data to numbers allows calculations, summaries, and graphs to be created accurately. Any values that cannot be converted are marked as missing data.
+
+```phyton
+for col in ["PEMLR", "PWSSWGT", "PEMARITL", "PEEDUCA"]:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+```
+
+# Add clearer labels for the visualization(graphs)
+
+This code creates descriptive labels for the employment status codes used in the survey. Instead of displaying numeric codes, the data will show readable categories such as "Employed," "Unemployed," or "Retired." This makes the graphs easier to understand.
+
+```phyton
+employment_labels = {
+    1: "Employed",
+    2: "Employed - Absent",
+    3: "Unemployed - On Layoff",
+    4: "Unemployed - Looking",
+    5: "Not in Labor Force",
+    6: "Not in Labor Force - Disabled",
+    7: "Not in Labor Force - Other",
+    8: "Not in Labor Force - Retired"
+}
+
+df["Employment Status"] = df["PEMLR"].map(employment_labels)
+```
+
+# Graph 1: CPS Employment Status Categories
+
+This code creates a bar chart showing how many survey respondents fall into each employment status category. It counts the number of people in each category, displays the results as bars, adds labels and titles, and formats the chart to improve readability. All the data used is retrieved from the Census Bureau website url and API key from earlier.
+
+```phyton 
+plt.figure(figsize=(12, 6))
+status_counts = df["Employment Status"].value_counts(dropna=True)
+bars = plt.bar(status_counts.index, status_counts.values, color="steelblue")
+
+plt.title("CPS Employment Status Categories")
+plt.xlabel("Employment status")
+plt.ylabel("Number of people in the sample")
+plt.xticks(rotation=30, ha="right")
+plt.bar_label(bars)
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+# Graph 2: CPS Person Survey Weights
+
+This code creates a histogram showing the distribution of survey weights in the dataset. The graph groups survey weight values into ranges and displays how many people fall within each range. Titles, labels, and formatting are added to make the chart easier to interpret.
+
+```phyton 
+plt.figure(figsize=(10, 5))
+plt.hist(df["PWSSWGT"].dropna(), bins=10, color="orange", edgecolor="black")
+
+plt.title("CPS Person Survey Weights")
+plt.xlabel("Survey weight")
+plt.ylabel("Number of people in the sample")
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+```
+
+# Show Visualization
+This code displays the complete graphs so it can be viewed within the JupiterLite Notebook and also in this technical blog. 
+```phyton
+plt.show()
+```
