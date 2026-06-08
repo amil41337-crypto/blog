@@ -18,7 +18,7 @@ This code loads the tools needed for the project. It imports dependent of outsid
 - JSON for reading data returned from the Census API.
 - Fetch, which allows the notebook to request data from the internet.
 
-```phyton
+```python
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
@@ -37,7 +37,7 @@ async def get_json(url):
 
 This code requests data (by the helper function : get_json(url)) from the U.S. Census Bureau's Current Population Survey (CPS) API.  API is a key that a user registers to allow them to get data from the U.S. Census Bureau. The request asks for information about employment status, survey weights, marital status, and education level for all states. The returned data is stored for later analysis.
 
-```phyton
+```python
 
 data = await get_json(
     "https://api.census.gov/data/2026/cps/basic/jan?get=PEMLR,PWSSWGT,PEMARITL,PEEDUCA&for=state:*&key=YOUR_API_KEY"
@@ -50,7 +50,7 @@ This code separates the column names from the actual data and converts the infor
 
 **Data exploration and  preliminary data analysis is not shown here.**
 
-```phyton
+```python
 headers = data[0]
 rows = data[1:]
 df = pd.DataFrame(rows, columns=headers)
@@ -59,7 +59,7 @@ df = pd.DataFrame(rows, columns=headers)
 
 This code converts selected columns from text values into numeric values according to the merits wanted for the visualization. Converting the data to numbers allows calculations, summaries, and graphs to be created accurately. Any values that cannot be converted are marked as missing data.
 
-```phyton
+```python
 for col in ["PEMLR", "PWSSWGT", "PEMARITL", "PEEDUCA"]:
     df[col] = pd.to_numeric(df[col], errors="coerce")
 ```
@@ -68,7 +68,7 @@ for col in ["PEMLR", "PWSSWGT", "PEMARITL", "PEEDUCA"]:
 
 This code creates descriptive labels for the employment status codes used in the survey. Instead of displaying numeric codes, the data will show readable categories such as "Employed," "Unemployed," or "Retired." This makes the graphs easier to understand.
 
-```phyton
+```python
 employment_labels = {
     1: "Employed",
     2: "Employed - Absent",
@@ -87,7 +87,7 @@ df["Employment Status"] = df["PEMLR"].map(employment_labels)
 
 This code creates a bar chart showing how many survey respondents fall into each employment status category. It counts the number of people in each category, displays the results as bars, adds labels and titles, and formats the chart to improve readability. All the data used is retrieved from the Census Bureau website url and API key from earlier.
 
-```phyton 
+```python 
 plt.figure(figsize=(12, 6))
 status_counts = df["Employment Status"].value_counts(dropna=True)
 bars = plt.bar(status_counts.index, status_counts.values, color="steelblue")
@@ -106,7 +106,7 @@ plt.show()
 
 This code creates a histogram showing the distribution of survey weights in the dataset. The graph groups survey weight values into ranges and displays how many people fall within each range. Titles, labels, and formatting are added to make the chart easier to interpret.
 
-```phyton 
+```python 
 plt.figure(figsize=(10, 5))
 plt.hist(df["PWSSWGT"].dropna(), bins=10, color="orange", edgecolor="black")
 
@@ -119,7 +119,7 @@ plt.tight_layout()
 
 # Show Visualization
 This code displays the complete graphs so it can be viewed within the JupiterLite Notebook and also in this technical blog. 
-```phyton
+```python
 plt.show()
 ```
 ## CPS Person Survey Weights
